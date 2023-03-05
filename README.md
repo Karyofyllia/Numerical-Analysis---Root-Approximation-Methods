@@ -1,5 +1,5 @@
 # Numerical Analysis - Root Approximation Methods
-Implemented PA = LU factorization, Bisection, Newton Raphson and Secant Methods.
+Implemented PA = LU factorization, Bisection, Newton Raphson, Secant Methods and Cholesky Decomposition.
 
 In this project I will use 2 functions.Bisection, Newton Raphson and Secant Methods are implemented on the first function and the second one is used for Modified methods I created (from Bisection Newton-Raphson and Secant Methods).
 
@@ -119,3 +119,195 @@ def secant_method(a,b):
     return a,iterat
   ```
   
+For intervals `[-2,2]` and `[-2,0]`:
+```ruby
+secant_method(-2,2)
+```
+![12](https://user-images.githubusercontent.com/37185221/222974106-4079e373-1b1b-445b-8551-c3b6ccb021d9.PNG)
+
+```ruby
+secant_method(-2,0) 
+```
+![13](https://user-images.githubusercontent.com/37185221/222974927-7a682035-5165-43a3-a270-8268da7873e1.PNG)
+
+### Second function
+![14](https://user-images.githubusercontent.com/37185221/222976288-d00a1729-03fd-4c66-ae9d-900a63d569c7.PNG)
+
+![9](https://user-images.githubusercontent.com/37185221/222976295-efb71b28-392d-4e62-ab22-b42385723276.PNG)
+
+## Modified Newton-Raphson 
+It's Newton-Raphson where the process is repeated as:
+
+![15](https://user-images.githubusercontent.com/37185221/222976553-c8317f64-b7d6-4696-b5aa-c9ea4d5f6950.PNG)
+
+until a sufficiently precise value is reached.
+
+```ruby
+def modified_NR(f2,derf2,dderf2,x):
+    iterat=0
+    while (np.abs(f2(x)) > e):
+        iterat=iterat+1
+        x= x - 1/((derf2(x)/f2(x)) - 1/2*(dderf2(x)/derf2(x))) #modified
+    return x,iterat
+```
+I compare results:
+```ruby
+modified_NR(f2,derf2,dderf2,1)
+```
+![16](https://user-images.githubusercontent.com/37185221/222976729-6f275a4b-11b0-40a4-8d5a-67fda07c23f0.PNG)
+
+```ruby
+modified_NR(f2,derf2,dderf2,3)
+```
+![17](https://user-images.githubusercontent.com/37185221/222976758-5e410f72-bf7e-4e63-8774-e05a46147fb2.PNG)
+
+```ruby
+modified_NR(f2,derf2,dderf2,2)
+```
+![18](https://user-images.githubusercontent.com/37185221/222976800-d274bedc-9203-4b9d-a5b5-ccd1953a96c7.PNG)
+
+## Modified Bisection Method
+A Bisection Method where the estimation of the root is not the mean value of the interval, but a random value (each iteration).
+
+```ruby
+def modified_BM(a,b,iterat):    
+   
+    if  f2(a)*f2(b)<0:
+        m = random.uniform(a,b) #modified
+        if (np.abs(f2(m)) < e):
+            m= m + e
+            return m, iterat
+
+        if f2(a)*f2(m)<0:
+            iterat=iterat+1
+            return modified_BM(a,m,iterat)
+        else:
+            iterat=iterat+1
+            return modified_BM(m,b,iterat)
+ ```
+
+Testing: 
+```ruby
+modified_BM(0.9,2,0)
+```
+![20](https://user-images.githubusercontent.com/37185221/222977278-8ac15aef-05ee-4436-9f82-beb267dfaf1b.PNG)
+
+## Modified Secant Method
+A Secant method where we start from three initial values. This method is defined by the recurrence relation:
+
+![21](https://user-images.githubusercontent.com/37185221/222977449-66c589f5-d1c3-45b0-8169-f04b47b0ec22.PNG)
+
+where,
+
+![22](https://user-images.githubusercontent.com/37185221/222977494-0b59835e-8132-4de0-88ac-92d315c34487.PNG)
+
+```ruby
+def modified_SM(x1,x2,x3): 
+    iterat=0
+    q=f2(x1)/f2(x2)
+    r=f2(x3)/f2(x2)
+    s=f2(x3)/f2(x1)
+    while (np.abs(f2(x3)) > e):
+        iterat=iterat+1
+        x4 = x3 - (r*(r-q)*(x3-x2)+(1-r)*s*(x3-x1))/((q-1)*(r-1)*(s-1))
+        x1=x2
+        x2=x3
+        x3=x4
+    return x3,iterat
+```
+Testing:
+```ruby
+modified_SM(0,1,3)
+```
+![23](https://user-images.githubusercontent.com/37185221/222977570-f04607b2-86fb-4e81-94b8-03fd452fbb84.PNG)
+
+## PA=LU
+An LU factorization refers to the factorization of A, with proper row and/or column orderings or permutations, into two factors – a lower triangular matrix L and an upper triangular matrix U: **A=LU**  
+
+![24](https://user-images.githubusercontent.com/37185221/222977937-1d426f1c-a2c0-451b-83ea-1935f062f4fc.PNG)
+
+LU factorization with partial pivoting (LUP) refers often to LU factorization with row permutations only:
+**PA=LU**
+,where L and U are again lower and upper triangular matrices, and P is a permutation matrix, which, when left-multiplied to A, reorders the rows of A.<sub>Source: [Wiki](https://en.wikipedia.org/wiki/LU_decomposition)</sub>
+
+First I find L, P and U matrixes.
+```ruby
+def find_LPU(A):
+    
+    L = np.zeros((A.shape[0],A.shape[1]))  #initialize with 0
+    P= np.diag(np.ones(A.shape[0]))        #initialize: 1 diagonial 0 elsewhere.
+    
+    for j in range(A.shape[0]-1): 
+            if (A[j][1]==0 or A[j][1]<A[j+1][1]):
+                Pnew= np.diag(np.ones(A.shape[0]))
+                A[[j+1,j],:]=A[[j,j+1],:] 
+                
+                Pnew[[j+1,j],:]=Pnew[[j,j+1],:] #for every line shift of A , do the same to P.
+                P = np.dot(Pnew,P)              #multiple older with present P
+
+    for i in range(0, A.shape[0]): 
+       
+            
+        L[i][i]=1
+
+        for j in range(i + 1, A.shape[0]): #Gauss
+            if (A[i][j]): 
+                l=A[j][i]/A[i][i]
+                A[j] = A[j] - A[i] * (A[j][i]/A[i][i])
+                L[j][i] = l
+        U=A
+                
+    return L,P,U
+    ```
+   Implement PA=LU:
+   ```ruby
+   def PALU(A,b):
+    L,P,U= find_LPU(A)
+    b = np.dot(P,b) 
+    print("L\n",L)
+    print("P\n",P)
+    print("U\n",U)
+    print(b)
+    y = solve(L,b) #Ly=b
+    print("y= ",y) 
+    x=solve(U,y)   #Ux=y
+    
+    return x
+ ```
+Test method for matrix `A=[2,1,5],[4,4,-4],[1,3,1]` and `b=[5,0,6]`.
+```ruby
+M= np.array([[2,1,5],[4,4,-4],[1,3,1]])
+b=np.array([5,0,6])
+PALU(M,b)
+```
+![25](https://user-images.githubusercontent.com/37185221/222978343-0eb15d67-f5f2-4644-963f-4ec329ee2a05.PNG)
+
+## Cholesky Decomposition
+s a decomposition of the form **A=LL*** where L is a lower triangular matrix with real and positive diagonal entries, and L* denotes the conjugate transpose of L.<sub>Source: [Wiki](https://en.wikipedia.org/wiki/Cholesky_decomposition)</sub>
+
+```ruby
+def cholesky(A):
+    L = np.array([[0.0] * A.shape[0] for i in range(A.shape[0])])
+   
+    for i in range(A.shape[0]):
+        for j in range(i+1):
+            sum_ch = sum(L[i][k] * L[j][k] for k in range(j))
+            
+            if (i == j): 
+                L[i][j] = math.sqrt(A[i][i] - sum_ch)
+            else:
+                L[i][j] = (1.0 / L[j][j] * (A[i][j] - sum_ch))
+    return L
+ ```
+ Test for matrix `A=[6, 3, 4, 8], [3, 6, 5, 1], [4, 5, 10, 7], [8, 1, 7, 25]` :
+ ```ruby
+ A = np.array([[6, 3, 4, 8], [3, 6, 5, 1], [4, 5, 10, 7], [8, 1, 7, 25]])
+L = cholesky(A)
+print("A:\n",A)
+
+
+print("L:\n",L)
+```
+![26](https://user-images.githubusercontent.com/37185221/222978570-61f782bc-3906-444e-81b9-8abd32c5d489.PNG)
+
+
